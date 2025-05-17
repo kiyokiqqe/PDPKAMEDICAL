@@ -11,7 +11,6 @@
         <!-- Меню лікаря -->
         <aside class="w-64 bg-white p-4 rounded-lg shadow space-y-4">
             <h3 class="text-lg font-bold text-gray-700">{{ __("Меню лікаря") }}</h3>
-
             <nav class="flex flex-col space-y-2">
                 <a href="{{ route('doctor.dashboard') }}"
                    class="block px-4 py-2 rounded hover:bg-gray-200
@@ -29,14 +28,8 @@
 
         <!-- Основний контент -->
         <div class="flex-1 bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <h3 class="text-lg font-bold">{{ __('Вітаємо, лікар!') }}</h3>
-            <p>{{ __('Це ваш головний дашборд. Тут ви можете переглядати своїх пацієнтів та керувати ними.') }}</p>
+            <h3 class="text-lg font-bold">{{ __("Вітаємо на дашборді лікаря") }}</h3>
+            <p>{{ __("Тут ви можете переглядати, редагувати пацієнтів та додавати нотатки.") }}</p>
         </div>
     </div>
 @endsection

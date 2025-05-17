@@ -2,12 +2,12 @@
 
 @section('header')
     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        {{ __('Редагувати пацієнта (Лікар)') }}
+        {{ __('Редагувати пацієнта') }}
     </h2>
 @endsection
 
 @section('content')
-    <form action="{{ route('doctor.patients.update', $patient) }}" method="POST" class="space-y-4 max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <form action="{{ route('nurse.patients.update', $patient) }}" method="POST" class="space-y-4">
         @csrf
         @method('PUT')
 
@@ -42,6 +42,6 @@
         </div>
 
         <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Оновити</button>
-        <a href="{{ route('doctor.patients.index') }}" class="ml-4 text-gray-600 hover:underline">Скасувати</a>
+        <a href="{{ route('nurse.patients.index') }}" class="ml-4 text-gray-600 hover:underline">Скасувати</a>
     </form>
 @endsection

@@ -14,7 +14,7 @@ class UserController extends Controller
     return view('admin.users.index', compact('users'));
 }
 
-    // Показати форму створення користувача
+    
     public function create()
     {
         return view('chief.users.create');
@@ -63,7 +63,7 @@ class UserController extends Controller
             'status' => 'nullable|in:active,inactive',
         ]);
 
-        // Якщо користувач редагує самого себе і він chief або admin — не дозволяємо змінювати роль і статус
+        // Якщо користувач редагує самого себе і він chief або admin — не дозволяти змінювати роль і статус
         if (in_array($user->role, [1, 2]) && auth()->id() === $user->id) {
             unset($validated['role'], $validated['status']);
         }

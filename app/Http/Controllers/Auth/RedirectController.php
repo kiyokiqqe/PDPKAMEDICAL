@@ -3,17 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RedirectController extends Controller
 {
     public function redirectByRole()
     {
-        $user = auth()->user();
-
-        if (!$user) {
-            return redirect()->route('welcome');
-        }
+        $user = Auth::user();
 
         switch ($user->role) {
             case 1:
@@ -25,7 +21,8 @@ class RedirectController extends Controller
             case 4:
                 return redirect()->route('nurse.dashboard');
             default:
-                return redirect()->route('welcome');
+                Auth::logout();
+                return redirect()->route('welcome')->with('error', 'Ваша роль не визначена або некоректна. Зверніться до адміністратора.');
         }
     }
 }
