@@ -11,7 +11,9 @@
                 <div class="p-6 text-gray-900">
                     <h3>{{ __("Вітаємо на дашборді медсестри") }}</h3>
                     <p>{{ __("Тут ви можете переглядати інформацію про пацієнтів та допомагати лікарям.") }}</p>
-                    <a href="{{ route('patients.index') }}" class="text-blue-500">Перегляд пацієнтів</a>
+                    <a href="{{ route('patients.index') }}" class="text-blue-500 hover:underline">
+                        {{ __('Перегляд пацієнтів') }}
+                    </a>
                 </div>
             </div>
         </div>

@@ -1,68 +1,77 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RedirectController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PatientController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\RedirectController;
 
-/*
-|----------------------------------------------------------------------| 
-| Web Routes 
-|----------------------------------------------------------------------|
-| Тут реєструються маршрути для веб-інтерфейсу. Всі маршрути обробляються
-| через RouteServiceProvider та мають групу middleware "web". 
-*/
+// Controllers for Chief
+use App\Http\Controllers\Chief\ChiefController;
+use App\Http\Controllers\Chief\ChiefPatientController;
+use App\Http\Controllers\Chief\ChiefUserController;
 
-// Головна сторінка (Welcome) — доступна для всіх, але при авторизації відбувається перенаправлення
+// Controllers for Admin
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminPatientController;
+
+// Controllers for Doctor
+use App\Http\Controllers\Doctor\DoctorController;
+use App\Http\Controllers\Doctor\PatientController as DoctorPatientController;
+
+// Controller for Nurse
+use App\Http\Controllers\Nurse\NurseController;
+
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('redirect.by.role');
     }
-    return view('welcome');
+    return view('welcome');  // Проста welcome-сторінка
 })->name('welcome');
 
-// Група маршрутів з обов'язковою авторизацією та підтвердженням email
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    // Розумне перенаправлення користувача після входу по ролі
+    // Перенаправлення після логіну за роллю
     Route::get('/redirect-by-role', [RedirectController::class, 'redirectByRole'])->name('redirect.by.role');
 
-    // Dashboard для завідувача
-    Route::get('/chief-dashboard', function () {
-        return view('roles.chief');
-    })->name('chief.dashboard');
+    // Роль 1 — Завідувач
+    Route::prefix('chief')->name('chief.')
+        ->middleware('role:1')  // Переконайтесь, що middleware role приймає роль як число
+        ->group(function () {
+            Route::get('/dashboard', [ChiefController::class, 'index'])->name('dashboard');
+            Route::resource('patients', ChiefPatientController::class);
+            Route::resource('users', ChiefUserController::class);
+        });
 
-    // Dashboard для адміністратора
-    Route::get('/admin-dashboard', function () {
-        return view('roles.admin');
-    })->name('admin.dashboard');
+    // Роль 2 — Адміністратор
+    Route::prefix('admin')->name('admin.')
+        ->middleware('role:2')
+        ->group(function () {
+            Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+            Route::resource('patients', AdminPatientController::class);
+            Route::resource('users', AdminUserController::class);
+        });
 
-    // Dashboard для лікаря/фармацевта
-    Route::get('/doctor-dashboard', function () {
-        return view('roles.doctor');
-    })->name('doctor.dashboard');
+    // Роль 3 — Лікар
+    Route::prefix('doctor')->name('doctor.')
+        ->middleware('role:3')
+        ->group(function () {
+            Route::get('/dashboard', [DoctorController::class, 'index'])->name('dashboard');
+            Route::resource('patients', DoctorPatientController::class);
+            Route::post('/note', [DoctorController::class, 'saveNote'])->name('note.save');
+        });
 
-    // Dashboard для медсестри/медбрата
-    Route::get('/nurse-dashboard', function () {
-        return view('roles.nurse');
-    })->name('nurse.dashboard');
+    // Роль 4 — Медсестра
+    Route::prefix('nurse')->name('nurse.')
+        ->middleware('role:4')
+        ->group(function () {
+            Route::get('/dashboard', [NurseController::class, 'index'])->name('dashboard');
+            Route::resource('patients', AdminPatientController::class);  // Якщо медсестра працює з пацієнтами через AdminPatientController
+        });
 
-    // Профіль користувача
+    // Профіль користувача (спільний)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Додано маршрут для перегляду користувачів
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
-    Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
-
-    // Додано маршрут для головного дашборду, якщо ви хочете перенаправляти до загального дашборду після логіну
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
 });
 
-// Всі маршрути аутентифікації (login, register, reset)
 require __DIR__.'/auth.php';

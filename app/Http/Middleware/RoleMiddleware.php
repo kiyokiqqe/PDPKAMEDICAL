@@ -13,17 +13,52 @@ class RoleMiddleware
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
-     * @param  mixed ...$roles
+     * @param  mixed ...$roles  Масив ролей (ключів з $roleMap або чисел)
      * @return mixed
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
+        // Якщо користувач не авторизований — заборонити доступ
         if (!Auth::check()) {
-            return redirect()->route('login');
+            abort(403, 'Доступ заборонено');
         }
 
-        if (!in_array(Auth::user()->role, $roles)) {
-            abort(403, 'У вас немає доступу до цієї сторінки.');
+        // Мапа ролей: назва => числовий код (з users.role)
+        $roleMap = [
+            'chief' => 1,
+            'admin' => 2,
+            'doctor' => 3,
+            'nurse' => 4,
+            // Можна додавати комбінації ролей, якщо потрібно
+            'chief_or_admin' => [1, 2],
+        ];
+
+        $allowedRoles = [];
+
+        foreach ($roles as $role) {
+            if (isset($roleMap[$role])) {
+                if (is_array($roleMap[$role])) {
+                    $allowedRoles = array_merge($allowedRoles, $roleMap[$role]);
+                } else {
+                    $allowedRoles[] = $roleMap[$role];
+                }
+            } elseif (is_numeric($role)) {
+                // Якщо передано число як рядок — перетворюємо в int
+                $allowedRoles[] = (int) $role;
+            }
+            // Якщо роль не знайдена і не число — ігноруємо
+        }
+
+        // Якщо список дозволених ролей пустий — доступ заборонено
+        if (empty($allowedRoles)) {
+            abort(403, 'Доступ заборонено');
+        }
+
+        $userRole = Auth::user()->role;
+
+        // Перевіряємо, чи роль користувача в списку дозволених
+        if (!in_array($userRole, $allowedRoles, true)) {
+            abort(403, 'Доступ заборонено');
         }
 
         return $next($request);

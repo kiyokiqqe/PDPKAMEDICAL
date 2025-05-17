@@ -7,47 +7,76 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    // Метод для перегляду всіх користувачів
+    // Вивести список користувачів
     public function index()
-    {
-        // Завідувач бачить всіх користувачів
-        if (auth()->user()->role == 1) {
-            $users = User::all();
-        } elseif (auth()->user()->role == 2) {
-            // Адміністратор бачить лише лікарів і медсестер
-            $users = User::whereIn('role', [3, 4])->get();
-        } else {
-            abort(403, 'Доступ заборонено');
-        }
+{
+    $users = User::paginate(10);
+    return view('admin.users.index', compact('users'));
+}
 
-        return view('users.index', compact('users'));
+    // Показати форму створення користувача
+    public function create()
+    {
+        return view('chief.users.create');
     }
 
-    // Метод для редагування користувача
-    public function edit(User $user)
-    {
-        // Перевірка прав доступу
-        if (auth()->user()->role == 1 || (auth()->user()->role == 2 && in_array($user->role, [3, 4]))) {
-            return view('users.edit', compact('user'));
-        }
+    // Зберегти нового користувача
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|confirmed|min:8',
+        'role' => 'required|string|in:chief,admin,doctor,nurse',
+    ]);
 
-        abort(403, 'Доступ заборонено');
+    User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => bcrypt($validated['password']),
+        'role' => $validated['role'],
+    ]);
+
+    return redirect()->route('chief.users.index')->with('success', 'Користувача створено!');
+}
+
+    // Показати деталі користувача
+    public function show(User $user)
+    {
+        return view('chief.users.show', compact('user'));
     }
 
-    // Метод для оновлення даних користувача
+    // Форма редагування користувача
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        return view('chief.users.edit', compact('user'));
+    }
+
+    // Оновити користувача (без зміни паролю)
     public function update(Request $request, User $user)
     {
-        // Перевірка прав доступу
-        if (auth()->user()->role == 1 || (auth()->user()->role == 2 && in_array($user->role, [3, 4]))) {
-            $user->update($request->validate([
-                'name' => 'required',
-                'email' => 'required|email',
-                'role' => 'required|integer',
-            ]));
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'role' => 'nullable|in:1,2,3,4',
+            'status' => 'nullable|in:active,inactive',
+        ]);
 
-            return redirect()->route('users.index')->with('success', 'Користувача оновлено');
+        // Якщо користувач редагує самого себе і він chief або admin — не дозволяємо змінювати роль і статус
+        if (in_array($user->role, [1, 2]) && auth()->id() === $user->id) {
+            unset($validated['role'], $validated['status']);
         }
 
-        abort(403, 'Доступ заборонено');
+        $user->update($validated);
+
+        return redirect()->route('chief.users.index')->with('success', 'Користувача оновлено');
+    }
+
+    // Видалити користувача
+    public function destroy(User $user)
+    {
+        $user->delete();
+        return redirect()->route('chief.users.index')->with('success', 'Користувача видалено');
     }
 }

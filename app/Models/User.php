@@ -26,7 +26,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'password' => 'hashed',  // автоматичне хешування пароля Laravel 10+
     ];
 
     // Роль перевірки
